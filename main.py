@@ -1,5 +1,6 @@
 import sqlite3
 import asyncio
+import aiosqlite
 import smtplib
 from settings import EMAIL, PASSWORD
 
@@ -26,12 +27,11 @@ async def send_email(receiver, first_name):
 
 
 async def main():
-    conn = sqlite3.connect('contacts.db')
-    curs = conn.cursor()
-    contacts = curs.execute("SELECT * FROM contacts limit 2;").fetchall()
+    async with aiosqlite.connect('contacts.db') as conn:
+        curs = await conn.execute('SELECT * FROM contacts;')
+        contacts = await curs.fetchall()
 
-    mail = await asyncio.gather(*[send_email(contact[3], contact[1]) for contact in contacts])
-    print('and now')
+        mail = await asyncio.gather(*[send_email(contact[3], contact[1]) for contact in contacts])
     return mail
 
 
